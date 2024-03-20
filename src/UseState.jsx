@@ -10,23 +10,56 @@ export function UseState({ name }) {
 		deleted: false,
 		confirmed: false,
 	});
+	// Funciones para estados semideclarativos
+	const onConfirm = () => {
+		setState({
+			...state,
+			error: false,
+			loading: false,
+			confirmed: true,
+		});
+	};
+	const onError = () => {
+		setState({
+			...state,
+			error: true,
+			loading: false,
+		});
+	};
+	const onWrite = (newValue) => {
+		setState({
+			...state,
+			value: newValue,
+		});
+	};
+	const onCheck = () => {
+		setState({
+			...state,
+			loading: true,
+		});
+	};
+	const onDelete = () => {
+		setState({
+			...state,
+			deleted: true,
+		});
+	};
+	const onReset = () => {
+		setState({
+			...state,
+			confirmed: false,
+			deleted: false,
+			value: "",
+		});
+	};
 
 	React.useEffect(() => {
 		if (state.loading) {
 			setTimeout(() => {
 				if (state.value === SECURITY_CODE) {
-					setState({
-						...state,
-						error: false,
-						loading: false,
-						confirmed: true,
-					});
+					onConfirm();
 				} else {
-					setState({
-						...state,
-						error: true,
-						loading: false,
-					});
+					onError();
 				}
 			}, 1000);
 		}
@@ -43,18 +76,12 @@ export function UseState({ name }) {
 					placeholder="Codigo de seguridad"
 					value={state.value}
 					onChange={(event) => {
-						setState({
-							...state,
-							value: event.target.value,
-						});
+						onWrite(event.target.value);
 					}}
 				/>
 				<button
 					onClick={() => {
-						setState({
-							...state,
-							loading: true,
-						});
+						onCheck();
 					}}
 				>
 					Comprobar
@@ -67,21 +94,14 @@ export function UseState({ name }) {
 				<p>Pedimos confirmación, ¿Estas seguro?</p>
 				<button
 					onClick={() => {
-						setState({
-							...state,
-							deleted: true,
-						});
+						onDelete();
 					}}
 				>
 					Si, eliminar
 				</button>
 				<button
 					onClick={() => {
-						setState({
-							...state,
-							confirmed: false,
-							value: "",
-						});
+						onReset();
 					}}
 				>
 					No, volver
@@ -94,12 +114,7 @@ export function UseState({ name }) {
 				<p>Eliminado con exito</p>
 				<button
 					onClick={() => {
-						setState({
-							...state,
-							confirmed: false,
-							deleted: false,
-							value: "",
-						});
+						onReset();
 					}}
 				>
 					Recuperar el estado
