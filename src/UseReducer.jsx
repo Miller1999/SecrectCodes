@@ -13,17 +13,98 @@ export function UseReducer({ name }) {
 	};
 	const [state, dispatch] = React.useReducer(reducer, initialState);
 
+	// Este objeto se crea con el fin de evitar errores por tipado, es decir, por escritura si no equivocamos al escribir write en minuscula, writeee o algo por el estilo, de esta manera lo mismo de los action types esta presente en todas las partes
+	const actionTypes = {
+		CONFIRM: "CONFIRM",
+		ERROR: "ERROR",
+		CHECK: "CHECK",
+		DELETE: "DELETE",
+		RESET: "RESET",
+		WRITE: "WRITE",
+	};
+	// Las action creators es de manera que se puede mejorar la legibilidad de la aplicacion y que solo se deba cambiar en un solo sitio
+	const onConfirm = () => {
+		dispatch({
+			type: actionTypes.CONFIRM,
+		});
+	};
+	const onError = () => {
+		dispatch({
+			type: actionTypes.ERROR,
+		});
+	};
+	const onWrite = (newValue) => {
+		dispatch({
+			type: actionTypes.WRITE,
+			// Se usa el payload para enviar informacion proveniente del DOM
+			payload: newValue,
+		});
+	};
+	const onCheck = () => {
+		dispatch({
+			type: actionTypes.CHECK,
+		});
+	};
+	const onDelete = () => {
+		dispatch({
+			type: actionTypes.DELETE,
+		});
+	};
+	const onReset = () => {
+		dispatch({
+			type: actionTypes.RESET,
+		});
+	};
+	const reducerObject = (state, payload) => ({
+		// Aqui se coloca cada accion que se quiera hacer para los states
+		// Se manda el payload para obtener lo proveniente del DOM
+		[actionTypes.CONFIRM]: {
+			...state,
+			error: false,
+			loading: false,
+			confirmed: true,
+		},
+		[actionTypes.ERROR]: {
+			...state,
+			error: true,
+			loading: false,
+		},
+		[actionTypes.CHECK]: {
+			...state,
+			loading: true,
+		},
+		[actionTypes.DELETE]: {
+			...state,
+			deleted: true,
+		},
+		[actionTypes.RESET]: {
+			...state,
+			confirmed: false,
+			deleted: false,
+			value: "",
+		},
+		[actionTypes.WRITE]: {
+			...state,
+			value: payload,
+		},
+	});
+
+	const reducer = (state, action) => {
+		if (reducerObject(state)[action.type]) {
+			// action.payload para enviar la info proveniente del DOM
+			return reducerObject(state, action.payload)[action.type];
+		} else {
+			return state;
+		}
+	};
+
 	React.useEffect(() => {
 		if (state.loading) {
 			setTimeout(() => {
 				if (state.value === SECURITY_CODE) {
-					dispatch({
-						type: "CONFIRM",
-					});
+					onConfirm();
 				} else {
-					dispatch({
-						type: "ERROR",
-					});
+					onError();
 				}
 			}, 1000);
 		}
@@ -40,107 +121,26 @@ export function UseReducer({ name }) {
 					placeholder="Codigo de seguridad"
 					value={state.value}
 					onChange={(event) => {
-						dispatch({
-							type: "WRITE",
-							// Se usa el payload para enviar informacion proveniente del DOM
-							payload: event.target.value,
-						});
+						onWrite(event.target.value);
 					}}
 				/>
-				<button
-					onClick={() => {
-						dispatch({
-							type: "CHECK",
-						});
-					}}
-				>
-					Comprobar
-				</button>
+				<button onClick={onCheck}>Comprobar</button>
 			</div>
 		);
 	} else if (state.confirmed && !state.deleted) {
 		return (
 			<React.Fragment>
 				<p>Pedimos confirmación, ¿Estas seguro?</p>
-				<button
-					onClick={() => {
-						dispatch({
-							type: "DELETE",
-						});
-					}}
-				>
-					Si, eliminar
-				</button>
-				<button
-					onClick={() => {
-						dispatch({
-							type: "RESET",
-						});
-					}}
-				>
-					No, volver
-				</button>
+				<button onClick={onDelete}>Si, eliminar</button>
+				<button onClick={onReset}>No, volver</button>
 			</React.Fragment>
 		);
 	} else {
 		return (
 			<React.Fragment>
 				<p>Eliminado con exito</p>
-				<button
-					onClick={() => {
-						dispatch({
-							type: "RESET",
-						});
-					}}
-				>
-					Recuperar el estado
-				</button>
+				<button onClick={onReset}>Recuperar el estado</button>
 			</React.Fragment>
 		);
 	}
 }
-
-//! Tercera forma de crear un reducer
-//* Para este tipo se divide el reducer en dos: por un lado los objetos que seria el reducerObject, y la funcion reducer
-const reducerObject = (state, payload) => ({
-	// Aqui se coloca cada accion que se quiera hacer para los states
-	// Se manda el payload para obtener lo proveniente del DOM
-	CONFIRM: {
-		...state,
-		error: false,
-		loading: false,
-		confirmed: true,
-	},
-	ERROR: {
-		...state,
-		error: true,
-		loading: false,
-	},
-	CHECK: {
-		...state,
-		loading: true,
-	},
-	DELETE: {
-		...state,
-		deleted: true,
-	},
-	RESET: {
-		...state,
-		confirmed: false,
-		deleted: false,
-		value: "",
-	},
-	WRITE: {
-		...state,
-		value: payload,
-	},
-});
-
-const reducer = (state, action) => {
-	if (reducerObject(state)[action.type]) {
-		// action.payload para enviar la info proveniente del DOM
-		return reducerObject(state, action.payload)[action.type];
-	} else {
-		return state;
-	}
-};
